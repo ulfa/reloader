@@ -32,7 +32,7 @@
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 -export([start_link/0]).
 -export([start/0]).
--export([get_files_in_ebin/0, reload/0]).
+-export([reload/0]).
 %% ====================================================================
 %% External functions
 %% ====================================================================
@@ -76,7 +76,7 @@ init([]) ->
 %%          {stop, Reason, State}            (terminate/2 is called)
 %% --------------------------------------------------------------------
 handle_call(reload, From, State) ->
-	reload_modules(get_files_in_ebin()),
+	reload_modules(),
     {reply, ok, State};
 
 handle_call(Request, From, State) ->
@@ -101,7 +101,7 @@ handle_cast(Msg, State) ->
 %%          {stop, Reason, State}            (terminate/2 is called)
 %% --------------------------------------------------------------------
 handle_info(reload, State) ->
-	reload_modules(get_files_in_ebin()),
+	reload_modules(),
     {noreply, State};
 
 handle_info(Info, State) ->
@@ -126,18 +126,74 @@ code_change(OldVsn, State, Extra) ->
 %% --------------------------------------------------------------------
 %%% Internal functions
 %% --------------------------------------------------------------------
-get_files_in_ebin() ->
-	{ok, Files} = file:list_dir("./ebin"),
-	[list_to_atom(filename:rootname(File)) || File <- Files].
+reload_modules() ->
+	[load_module(Module) || {Module, File} <- code:all_loaded(), is_not_system_module(Module), is_beamfile(File), is_old(Module,File)].
 
-reload_modules([]) ->
-	[];
-reload_modules([Module|Modules]) ->
-	lager:debug("reload ~p ", [Module]),
+is_old(Module,File) ->
+	loaded_time(Module) < not_yet_loaded_time(File).
+
+is_beamfile(File) ->
+	ok =:= element(1,file:read_file_info(File)) andalso ".beam" =:= filename:extension(File).
+
+not_yet_loaded_time(File) ->
+	{ok,{_,[{_,I}]}} = beam_lib:chunks(File,[compile_info]),
+	proplists:get_value(time,I).
+
+loaded_time(Module) ->
+	proplists:get_value(time, Module:module_info(compile)).
+
+load_module(Module) ->
+	lager:info("reload ~p ", [Module]),
 	code:purge(Module),
-	code:load_file(Module),
-	reload_modules(Modules).
+	code:load_file(Module).
 
+is_not_system_module(Module) ->
+	[] =:= [X || X <- get_system_modules(), X =:= Module].
+get_system_modules() ->
+		[
+        appmon,
+        asn1,
+        common_test,
+        compiler,
+        crypto,
+        debugger,
+        dialyzer,
+        docbuilder,
+        edoc,
+        erl_interface,
+        erts,
+        et,
+        eunit,
+        gs,
+        hipe,
+        inets,
+        inets,
+        inviso,
+        jinterface,
+        kernel,
+        mnesia,
+        observer,
+        orber,
+        os_mon,
+        parsetools,
+        percept,
+        pman,
+        reltool,
+        runtime_tools,
+        sasl,
+        snmp,
+        ssl,
+        stdlib,
+        syntax_tools,
+        test_server,
+        toolbar,
+        tools,
+        tv,
+        webtool,
+        wx,
+        xmerl,
+        zlib
+    ].
 %% --------------------------------------------------------------------
 %%% Test functions
 %% --------------------------------------------------------------------

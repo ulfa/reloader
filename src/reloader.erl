@@ -16,6 +16,8 @@
 %% --------------------------------------------------------------------
 -export([start/0, stop/0]).
 -export([set_debug/0, set_info/0]).
+-export([reload/0]).
+
 
 %% doc starrt the application
 %%
@@ -27,6 +29,9 @@
 	stop() ->
 		application:stop(lager),		
 		application:stop(?MODULE).
+
+	reload() ->
+		code_reloader:reload().
 
 	set_debug() ->
 		lager:set_loglevel(lager_console_backend, debug).
