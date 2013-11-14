@@ -76,8 +76,9 @@ init([]) ->
 %%          {stop, Reason, State}            (terminate/2 is called)
 %% --------------------------------------------------------------------
 handle_call(reload, From, State) ->
-	reload_modules(),
-    {reply, ok, State};
+    Changed_Modules = get_changed_modules(),
+	reload_modules(Changed_Modules),
+    {reply, Changed_Modules, State};
 
 handle_call(Request, From, State) ->
     Reply = ok,
@@ -101,7 +102,8 @@ handle_cast(Msg, State) ->
 %%          {stop, Reason, State}            (terminate/2 is called)
 %% --------------------------------------------------------------------
 handle_info(reload, State) ->
-	reload_modules(),
+    Changed_Modules = get_changed_modules(),
+    reload_modules(Changed_Modules),
     {noreply, State};
 
 handle_info(Info, State) ->
@@ -126,8 +128,14 @@ code_change(OldVsn, State, Extra) ->
 %% --------------------------------------------------------------------
 %%% Internal functions
 %% --------------------------------------------------------------------
-reload_modules() ->
-	[load_module(Module) || {Module, File} <- code:all_loaded(), is_not_system_module(Module), is_beamfile(File), is_old(Module,File)].
+get_changed_modules() ->
+    [Module || {Module, File} <- code:all_loaded(), is_not_system_module(Module), is_beamfile(File), is_old(Module,File)].
+
+reload_modules([]) ->
+    lager:info("nothing to reload"),
+    [];
+reload_modules(Changed_Modules) ->
+	[load_module(Module) || Module <- Changed_Modules].
 
 is_old(Module,File) ->
 	loaded_time(Module) < not_yet_loaded_time(File).
