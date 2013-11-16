@@ -132,7 +132,6 @@ get_changed_modules() ->
     [Module || {Module, File} <- code:all_loaded(), is_not_system_module(Module), is_beamfile(File), is_old(Module,File)].
 
 reload_modules([]) ->
-    lager:info("nothing to reload"),
     [];
 reload_modules(Changed_Modules) ->
 	[load_module(Module) || Module <- Changed_Modules].
