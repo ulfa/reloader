@@ -18,7 +18,7 @@
 %%%
 %%% Created : 
 %%% -------------------------------------------------------------------
--module(code_reloader).
+-module(re_code_reloader).
 
 -behaviour(gen_server).
 %% --------------------------------------------------------------------
@@ -37,7 +37,7 @@
 %% External functions
 %% ====================================================================
 reload() ->
-	gen_server:call(?MODULE, reload).
+    gen_server:call(?MODULE, reload).
 %% --------------------------------------------------------------------
 %% record definitions
 %% --------------------------------------------------------------------
@@ -53,7 +53,7 @@ start_link() ->
     gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
 
 start() ->
-	start_link().
+    start_link().
 %% --------------------------------------------------------------------
 %% Function: init/1
 %% Description: Initiates the server
@@ -77,7 +77,7 @@ init([]) ->
 %% --------------------------------------------------------------------
 handle_call(reload, From, State) ->
     Changed_Modules = get_changed_modules(),
-	reload_modules(Changed_Modules),
+    reload_modules(Changed_Modules),
     {reply, Changed_Modules, State};
 
 handle_call(Request, From, State) ->
@@ -134,30 +134,30 @@ get_changed_modules() ->
 reload_modules([]) ->
     [];
 reload_modules(Changed_Modules) ->
-	[load_module(Module) || Module <- Changed_Modules].
+    [load_module(Module) || Module <- Changed_Modules].
 
 is_old(Module,File) ->
-	loaded_time(Module) < not_yet_loaded_time(File).
+    loaded_time(Module) < not_yet_loaded_time(File).
 
 is_beamfile(File) ->
-	ok =:= element(1,file:read_file_info(File)) andalso ".beam" =:= filename:extension(File).
+    ok =:= element(1,file:read_file_info(File)) andalso ".beam" =:= filename:extension(File).
 
 not_yet_loaded_time(File) ->
-	{ok,{_,[{_,I}]}} = beam_lib:chunks(File,[compile_info]),
-	proplists:get_value(time,I).
+    {ok,{_,[{_,I}]}} = beam_lib:chunks(File,[compile_info]),
+    proplists:get_value(time,I).
 
 loaded_time(Module) ->
-	proplists:get_value(time, Module:module_info(compile)).
+    proplists:get_value(time, Module:module_info(compile)).
 
 load_module(Module) ->
-	lager:info("reload ~p ", [Module]),
-	code:purge(Module),
-	code:load_file(Module).
+    lager:info("reload ~p ", [Module]),
+    code:purge(Module),
+    code:load_file(Module).
 
 is_not_system_module(Module) ->
-	[] =:= [X || X <- get_system_modules(), X =:= Module].
+    [] =:= [X || X <- get_system_modules(), X =:= Module].
 get_system_modules() ->
-		[
+        [
         appmon,
         asn1,
         common_test,

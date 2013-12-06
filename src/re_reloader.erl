@@ -6,7 +6,7 @@
 %%% Description :
 %%%
 %%% Created :  
--module(reloader).
+-module(re_reloader).
 
 %% --------------------------------------------------------------------
 %% Include files
@@ -23,15 +23,15 @@
 %%
 	start() ->
 		application:start(lager),		
-	  	application:start(?MODULE).
+	  	application:start(reloader).
 
 %% doc stop the application
 	stop() ->
 		application:stop(lager),		
-		application:stop(?MODULE).
+		application:stop(reloader).
 
 	reload() ->
-		code_reloader:reload().
+		re_code_reloader:reload().
 
 	set_debug() ->
 		lager:set_loglevel(lager_console_backend, debug).

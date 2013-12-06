@@ -10,7 +10,7 @@
 %% ===================================================================
 
 start(_StartType, _StartArgs) ->
-    reloader_sup:start_link().
+    re_reloader_sup:start_link().
 
 stop(_State) ->
     ok.
